@@ -115,13 +115,9 @@ const CUSTOMER_QUERY = `
         zip
         country
       }
-      companyContactProfiles(first: 1) {
-        edges {
-          node {
-            company {
-              name
-            }
-          }
+      companyContactProfiles {
+        company {
+          name
         }
       }
     }
@@ -142,16 +138,14 @@ export async function getCustomerForDraftOrder(
       email: string | null;
       phone: string | null;
       defaultAddress: CustomerForDraft['defaultAddress'];
-      companyContactProfiles: {
-        edges: Array<{ node: { company: { name: string } | null } }>;
-      };
+      companyContactProfiles: Array<{ company: { name: string } | null }>;
     } | null;
   }>(session, CUSTOMER_QUERY, { id: gid });
 
   if (!data.customer) return null;
 
   const companyName =
-    data.customer.companyContactProfiles?.edges?.[0]?.node?.company?.name ?? null;
+    data.customer.companyContactProfiles?.[0]?.company?.name ?? null;
 
   return {
     id: data.customer.id,
