@@ -26,6 +26,9 @@ Copia `.env.example` a `.env`:
 | `SCOPES` | `write_draft_orders,read_customers,read_products` |
 | `HOST` | URL pública HTTPS, ej. `https://tu-app.fly.dev` |
 | `PORT` | Puerto local (default `3000`) |
+| `SHOPIFY_SHOP` | (Opcional) Dominio myshopify para `GET /health` → `sessionInstalled` |
+
+En **Render**, usa disco persistente o reinstala tras cada redeploy: la sesión offline se guarda en `sessions.json` en el filesystem del contenedor.
 
 ## Instalación local
 
@@ -42,8 +45,18 @@ npm run dev
    - `client_id`
    - `application_url` = tu `HOST`
    - `[app_proxy].url` = `{HOST}/api/proxy`
-3. Scopes: `write_draft_orders`, `read_customers`, `read_products`.
+3. Scopes: `write_draft_orders`, `read_draft_orders`, `read_customers`, `read_products`.
 4. Redirect URL: `{HOST}/auth/callback`.
+
+## Interfaz en Shopify Admin
+
+La app está **embebida** (`embedded = true`). Al abrirla en Admin verás:
+
+- Estado de conexión (sesión offline)
+- Últimas cotizaciones (draft orders con tags `quote-request`, `solicitud-cotización`, `b2b-request`)
+- Enlace a cada borrador en Admin
+
+Requiere scope `read_draft_orders`. Tras cambiar scopes, reinstala la app.
 
 ## Instalar en la tienda
 

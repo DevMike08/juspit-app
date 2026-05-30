@@ -3,10 +3,10 @@
 name = "Juspit B2B Quote"
 client_id = "af8499ac9ee89df64a708559af65ccbc"
 application_url = "https://juspit-app.onrender.com"
-embedded = false
+embedded = true
 
 [access_scopes]
-scopes = "write_draft_orders,read_customers,read_products"
+scopes = "write_draft_orders,read_draft_orders,read_customers,read_products"
 
 [auth]
 redirect_urls = [

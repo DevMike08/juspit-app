@@ -51,10 +51,13 @@ function getShopify() {
     shopify = shopifyApi({
       apiKey,
       apiSecretKey: apiSecret,
-      scopes: (process.env.SCOPES || 'write_draft_orders,read_customers').split(','),
+      scopes: (
+        process.env.SCOPES ||
+        'write_draft_orders,read_draft_orders,read_customers,read_products'
+      ).split(','),
       hostName: new URL(host).host,
       apiVersion: ApiVersion.January25,
-      isEmbeddedApp: false,
+      isEmbeddedApp: true,
     });
   }
   return shopify;
@@ -291,6 +294,74 @@ export async function createQuoteDraftOrder(
   }
 
   return { id: draftOrder.id, invoiceUrl: draftOrder.invoiceUrl };
+}
+
+export interface QuoteDraftSummary {
+  id: string;
+  name: string;
+  createdAt: string;
+  customerName: string;
+  adminUrl: string;
+  invoiceUrl: string;
+}
+
+const DRAFT_ORDERS_LIST = `
+  query ListQuoteDrafts($first: Int!, $query: String!) {
+    draftOrders(first: $first, query: $query, sortKey: UPDATED_AT, reverse: true) {
+      edges {
+        node {
+          id
+          name
+          createdAt
+          invoiceUrl
+          customer {
+            displayName
+            email
+          }
+        }
+      }
+    }
+  }
+`;
+
+function draftOrderAdminUrl(shop: string, gid: string): string {
+  const numericId = gid.split('/').pop() || gid;
+  return `https://${shop}/admin/draft_orders/${numericId}`;
+}
+
+export async function listRecentQuoteDraftOrders(
+  session: Session,
+  shop: string,
+  limit = 15
+): Promise<QuoteDraftSummary[]> {
+  const query =
+    'tag:quote-request OR tag:solicitud-cotización OR tag:b2b-request';
+
+  const data = await graphqlRequest<{
+    draftOrders: {
+      edges: Array<{
+        node: {
+          id: string;
+          name: string;
+          createdAt: string;
+          invoiceUrl: string;
+          customer: { displayName: string | null; email: string | null } | null;
+        };
+      }>;
+    };
+  }>(session, DRAFT_ORDERS_LIST, { first: limit, query });
+
+  return data.draftOrders.edges.map(({ node }) => ({
+    id: node.id,
+    name: node.name,
+    createdAt: node.createdAt,
+    customerName:
+      node.customer?.displayName ||
+      node.customer?.email ||
+      '—',
+    adminUrl: draftOrderAdminUrl(shop, node.id),
+    invoiceUrl: node.invoiceUrl,
+  }));
 }
 
 export function getShopifyAuth(): ReturnType<typeof shopifyApi> {

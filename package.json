@@ -5,7 +5,7 @@
   "description": "App Proxy para crear Draft Orders de cotización B2B",
   "type": "module",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/copy-public.mjs",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "test": "vitest run",
@@ -20,6 +20,7 @@
     "express": "^4.21.2"
   },
   "devDependencies": {
+    "@shopify/app-bridge-types": "^0.5.3",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.2",
     "tsx": "^4.19.2",

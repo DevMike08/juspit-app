@@ -1,16 +1,54 @@
 import 'dotenv/config';
 import express from 'express';
 import { handleCreateB2bDraftOrder } from './routes/create-b2b-draft-order.js';
-import { getShopifyAuth, storeSession } from './utils/shopifyAdmin.js';
+import { handleAdminStatus } from './routes/admin.js';
+import { getShopifyAuth, storeSession, getOfflineSession } from './utils/shopifyAdmin.js';
 import { logger } from './utils/logger.js';
+import { embeddedCsp } from './middleware/embeddedCsp.js';
+import { validateAdminSession } from './middleware/validateAdminSession.js';
+import { serveAdminPage, serveSessionTokenBounce } from './utils/serveAdminPage.js';
 
 const PORT = Number(process.env.PORT || 3000);
 const app = express();
 
+app.use(embeddedCsp);
 app.use(express.json());
 
-app.get('/health', (_req, res) => {
-  res.json({ ok: true, service: 'juspit-b2b-quote-app' });
+/** App embebida en Shopify Admin */
+app.get('/', (_req, res) => {
+  serveAdminPage(res);
+});
+
+app.get('/session-token-bounce', (_req, res) => {
+  serveSessionTokenBounce(res);
+});
+
+app.get('/api/admin/status', validateAdminSession, handleAdminStatus);
+
+app.get('/health', async (_req, res) => {
+  const shop = process.env.SHOPIFY_SHOP || '8675b1-fa.myshopify.com';
+  let sessionInstalled = false;
+  try {
+    const session = await getOfflineSession(shop);
+    sessionInstalled = Boolean(session?.accessToken);
+  } catch {
+    sessionInstalled = false;
+  }
+
+  const configured = Boolean(
+    process.env.SHOPIFY_API_KEY && process.env.SHOPIFY_API_SECRET && process.env.HOST
+  );
+
+  res.json({
+    ok: true,
+    service: 'juspit-b2b-quote-app',
+    configured,
+    sessionInstalled,
+    shop,
+    warning: sessionInstalled
+      ? undefined
+      : 'No offline session. Reinstall: /auth?shop=' + shop,
+  });
 });
 
 /** OAuth: inicio de instalación */

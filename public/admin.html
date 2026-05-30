@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="shopify-api-key" content="%SHOPIFY_API_KEY%" />
+  <script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+  <script src="https://cdn.shopify.com/shopifycloud/polaris.js"></script>
+</head>
+<body>
+  <s-page heading="Juspit B2B Quote">
+    <s-banner tone="info" heading="Cotizaciones desde el portal B2B."></s-banner>
+
+    <s-section heading="Estado">
+      <s-stack direction="inline" gap="base" alignItems="center">
+        <s-badge id="status-badge" tone="success">Conectada</s-badge>
+        <s-button id="reinstall-btn" variant="secondary" style="display: none">
+          Reinstalar app
+        </s-button>
+      </s-stack>
+    </s-section>
+
+    <s-section heading="Últimas cotizaciones">
+      <s-table id="quotes-table">
+        <s-table-header-row>
+          <s-table-header listSlot="primary">#</s-table-header>
+          <s-table-header>Cliente</s-table-header>
+          <s-table-header>Fecha</s-table-header>
+          <s-table-header listSlot="labeled">Acción</s-table-header>
+        </s-table-header-row>
+        <s-table-body id="quotes-body"></s-table-body>
+      </s-table>
+      <s-paragraph id="empty-msg" tone="neutral" color="subdued" hidden>
+        Aún no hay cotizaciones.
+      </s-paragraph>
+    </s-section>
+
+    <s-paragraph tone="neutral" color="subdued">
+      Proxy: POST /apps/create-b2b-draft-order
+    </s-paragraph>
+  </s-page>
+
+  <script>
+    function formatDate(iso) {
+      try {
+        return new Date(iso).toLocaleString('es-AR', {
+          dateStyle: 'short',
+          timeStyle: 'short',
+        });
+      } catch {
+        return iso;
+      }
+    }
+
+    function renderQuotes(quotes) {
+      const body = document.getElementById('quotes-body');
+      const empty = document.getElementById('empty-msg');
+      const table = document.getElementById('quotes-table');
+      body.replaceChildren();
+
+      if (!quotes || quotes.length === 0) {
+        table.hidden = true;
+        empty.hidden = false;
+        return;
+      }
+
+      table.hidden = false;
+      empty.hidden = true;
+
+      for (const q of quotes) {
+        const row = document.createElement('s-table-row');
+        row.innerHTML =
+          '<s-table-cell>' +
+          (q.name || '—') +
+          '</s-table-cell>' +
+          '<s-table-cell>' +
+          (q.customerName || '—') +
+          '</s-table-cell>' +
+          '<s-table-cell>' +
+          formatDate(q.createdAt) +
+          '</s-table-cell>' +
+          '<s-table-cell><s-link href="' +
+          q.adminUrl +
+          '" target="_top">Ver</s-link></s-table-cell>';
+        body.appendChild(row);
+      }
+    }
+
+    function setStatus(data) {
+      const badge = document.getElementById('status-badge');
+      const reinstall = document.getElementById('reinstall-btn');
+
+      if (data.connected) {
+        badge.tone = 'success';
+        badge.textContent = 'Conectada';
+        reinstall.style.display = 'none';
+      } else {
+        badge.tone = 'warning';
+        badge.textContent = 'Reinstalar app';
+        reinstall.style.display = 'inline-flex';
+        if (data.authUrl) {
+          reinstall.onclick = function () {
+            window.open(data.authUrl, '_top');
+          };
+        }
+      }
+    }
+
+    async function load() {
+      try {
+        const token = await shopify.idToken();
+        const res = await fetch('/api/admin/status', {
+          headers: { Authorization: 'Bearer ' + token },
+        });
+        if (!res.ok) throw new Error('status ' + res.status);
+        const data = await res.json();
+        setStatus(data);
+        renderQuotes(data.quotes);
+      } catch (e) {
+        console.error(e);
+        const badge = document.getElementById('status-badge');
+        badge.tone = 'critical';
+        badge.textContent = 'Error al cargar';
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>

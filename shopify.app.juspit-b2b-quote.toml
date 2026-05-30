@@ -1,18 +1,28 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "af8499ac9ee89df64a708559af65ccbc"
-application_url = "https://example.com"
+application_url = "https://juspit-app.onrender.com"
 embedded = true
 name = "Juspit B2B Quote"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
+scopes = "write_draft_orders,read_draft_orders,read_customers,read_products"
 optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ ]
+redirect_urls = [
+  "https://juspit-app.onrender.com/auth/callback",
+]
 
 [webhooks]
 api_version = "2026-04"
+
+[app_proxy]
+url = "https://juspit-app.onrender.com/api/proxy"
+subpath = "create-b2b-draft-order"
+prefix = "apps"
+
+[pos]
+embedded = false
