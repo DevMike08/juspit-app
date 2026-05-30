@@ -1,8 +1,8 @@
 # Learn more: https://shopify.dev/docs/apps/tools/cli/configuration
 
 name = "Juspit B2B Quote"
-client_id = "YOUR_CLIENT_ID"
-application_url = "https://YOUR_HOST"
+client_id = "af8499ac9ee89df64a708559af65ccbc"
+application_url = "https://juspit-app.onrender.com"
 embedded = false
 
 [access_scopes]
@@ -10,14 +10,14 @@ scopes = "write_draft_orders,read_customers,read_products"
 
 [auth]
 redirect_urls = [
-  "https://YOUR_HOST/auth/callback",
+  "https://juspit-app.onrender.com/auth/callback",
 ]
 
 [webhooks]
 api_version = "2025-01"
 
 [app_proxy]
-url = "https://YOUR_HOST/api/proxy"
+url = "https://juspit-app.onrender.com/api/proxy"
 subpath = "create-b2b-draft-order"
 prefix = "apps"
 
