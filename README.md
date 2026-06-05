@@ -27,8 +27,9 @@ Copia `.env.example` a `.env`:
 | `HOST` | URL pública HTTPS, ej. `https://tu-app.fly.dev` |
 | `PORT` | Puerto local (default `3000`) |
 | `SHOPIFY_SHOP` | (Opcional) Dominio myshopify para `GET /health` → `sessionInstalled` |
+| `DATABASE_URL` | URL de PostgreSQL (Render: Internal Database URL) |
 
-En **Render**, usa disco persistente o reinstala tras cada redeploy: la sesión offline se guarda en `sessions.json` en el filesystem del contenedor.
+Las sesiones offline se persisten en **PostgreSQL** (`shopify_sessions`). Tras el primer deploy con esta configuración, reinstala OAuth una vez (`/auth?shop=...`).
 
 ## Instalación local
 
@@ -66,7 +67,7 @@ Visita (sustituye valores):
 https://TU_HOST/auth?shop=tu-tienda.myshopify.com
 ```
 
-Tras OAuth, la sesión offline se guarda en `sessions.json`.
+Tras OAuth, la sesión offline se guarda en PostgreSQL.
 
 ## App Proxy
 

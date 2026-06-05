@@ -16,6 +16,10 @@ redirect_urls = [
 [webhooks]
 api_version = "2025-01"
 
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "https://juspit-app.onrender.com/webhooks/app-uninstalled"
+
 [app_proxy]
 url = "https://juspit-app.onrender.com/api/proxy"
 subpath = "create-b2b-draft-order"

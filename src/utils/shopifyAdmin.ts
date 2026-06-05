@@ -1,10 +1,13 @@
 import '@shopify/shopify-api/adapters/node';
 import { shopifyApi, ApiVersion, Session } from '@shopify/shopify-api';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { logger } from './logger.js';
+import {
+  storeSession as persistSession,
+  loadSession,
+  deleteSessionsByShop,
+} from './sessionStorage.js';
 
-const SESSIONS_FILE = join(process.cwd(), 'sessions.json');
+export { deleteSessionsByShop };
 
 export interface CartLineItem {
   variant_id: number;
@@ -63,30 +66,19 @@ function getShopify() {
   return shopify;
 }
 
-function loadSessions(): Record<string, Session> {
-  if (!existsSync(SESSIONS_FILE)) return {};
-  try {
-    const raw = JSON.parse(readFileSync(SESSIONS_FILE, 'utf8')) as Record<string, Session>;
-    return raw;
-  } catch {
-    return {};
-  }
-}
-
-function saveSessions(sessions: Record<string, Session>): void {
-  writeFileSync(SESSIONS_FILE, JSON.stringify(sessions, null, 2));
-}
-
-export function storeSession(session: Session): void {
-  const sessions = loadSessions();
-  sessions[session.id] = session;
-  saveSessions(sessions);
+export async function storeSession(session: Session): Promise<void> {
+  await persistSession(session);
 }
 
 export async function getOfflineSession(shop: string): Promise<Session | null> {
-  const sessions = loadSessions();
   const sessionId = getShopify().session.getOfflineId(shop);
-  return sessions[sessionId] ?? null;
+  const session = await loadSession(sessionId);
+
+  if (!session) {
+    logger.warn('Offline session missing', { shop, expectedSessionId: sessionId });
+  }
+
+  return session;
 }
 
 export async function graphqlRequest<T>(
